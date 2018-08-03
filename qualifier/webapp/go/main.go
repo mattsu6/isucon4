@@ -3,12 +3,15 @@ package main
 import (
 	"database/sql"
 	"fmt"
+	"net"
+	"net/http"
+	_ "net/http/pprof"
+	"strconv"
+
 	"github.com/go-martini/martini"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/martini-contrib/render"
 	"github.com/martini-contrib/sessions"
-	"net/http"
-	"strconv"
 )
 
 var db *sql.DB
@@ -46,8 +49,17 @@ func init() {
 }
 
 func main() {
+
+	I, error := net.Listen("tcp", ":0")
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("Listening on %s\n", I.addr())
+	go http.Serve(I, nil)
+
 	m := martini.Classic()
 
+	// セッションをクッキーに保存
 	store := sessions.NewCookieStore([]byte("secret-isucon"))
 	m.Use(sessions.Sessions("isucon_go_session", store))
 
@@ -56,10 +68,12 @@ func main() {
 		Layout: "layout",
 	}))
 
+	// rootのパス設定
 	m.Get("/", func(r render.Render, session sessions.Session) {
 		r.HTML(200, "index", map[string]string{"Flash": getFlash(session, "notice")})
 	})
 
+	// loginパス設定
 	m.Post("/login", func(req *http.Request, r render.Render, session sessions.Session) {
 		user, err := attemptLogin(req)
 
@@ -83,6 +97,7 @@ func main() {
 		r.Redirect("/mypage")
 	})
 
+	// mypageパス設定
 	m.Get("/mypage", func(r render.Render, session sessions.Session) {
 		currentUser := getCurrentUser(session.Get("user_id"))
 
