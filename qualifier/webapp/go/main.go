@@ -54,7 +54,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Printf("Listening on %s\n", I.addr())
+	fmt.Printf("Listening on %s\n", I.Addr())
 	go http.Serve(I, nil)
 
 	m := martini.Classic()
