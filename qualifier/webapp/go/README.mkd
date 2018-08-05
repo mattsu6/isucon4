@@ -4,7 +4,7 @@
 
 ```shell
 $ ./build.sh
-$ ./golang-webapp -enable_profile=true #enable_profileオプションを有効にするとプロファイリングが走り，結果を標準出力に出す
+$ ./golang-webapp
 ```
 
 ## How to development
@@ -13,4 +13,31 @@ $ ./golang-webapp -enable_profile=true #enable_profileオプションを有効�
 $ ./build.sh
 $ go get github.com/codegangsta/gin
 $ gin
+```
+
+## How to profiling
+- 予め，webappとbenchを起動させる
+- bench起動中に下記を実行
+  - Dockerの外からprofileを実行する場合は, ポート番号を適宜読み替える
+- profileが完了すると`/Users/kojiMac/pprof/pprof.golang-webapp.samples.cpu.002.pb.gz`のようなフォーマットでファイルが出力される
+- 出力されたファイルをpprofで展開すると，プロファイル結果を見れる
+
+```shell
+# プロファイルの開始
+$ go tool pprof -http=localhost:8080 http://localhost:6060/debug/pprof/profile
+# プロファイル結果の読み込み
+$ go tool pprof /Users/kojiMac/pprof/pprof.golang-webapp.samples.cpu.002.pb.gz
+> top10
+Showing nodes accounting for 3.21s, 52.03% of 6.17s total
+Dropped 400 nodes (cum <= 0.03s)
+Showing top 100 nodes out of 268
+      flat  flat%   sum%        cum   cum%
+         0     0%     0%      3.83s 62.07%  net/http.(*conn).serve
+         0     0%     0%      2.85s 46.19%  net/http.serverHandler.ServeHTTP
+         0     0%     0%      2.84s 46.03%  github.com/go-martini/martini.(*Martini).ServeHTTP
+         0     0%     0%      2.82s 45.71%  github.com/codegangsta/inject.(*injector).Invoke
+     0.01s  0.16%  0.16%      2.82s 45.71%  github.com/go-martini/martini.(*context).run
+     0.01s  0.16%  0.32%      2.81s 45.54%  reflect.Value.Call
+     0.01s  0.16%  0.49%      2.81s 45.54%  reflect.Value.call
+     ...
 ```
