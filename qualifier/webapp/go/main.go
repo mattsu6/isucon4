@@ -7,7 +7,9 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/martini-contrib/render"
 	"github.com/martini-contrib/sessions"
+	"log"
 	"net/http"
+	_ "net/http/pprof"
 	"strconv"
 )
 
@@ -46,6 +48,11 @@ func init() {
 }
 
 func main() {
+
+	go func() {
+		log.Println(http.ListenAndServe(":6060", nil))
+	}()
+
 	m := martini.Classic()
 
 	store := sessions.NewCookieStore([]byte("secret-isucon"))

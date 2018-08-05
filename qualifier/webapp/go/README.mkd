@@ -2,9 +2,9 @@
 
 ## How to build and run
 
-```shel
+```shell
 $ ./build.sh
-$ ./golang-webapp
+$ ./golang-webapp -enable_profile=true #enable_profileオプションを有効にするとプロファイリングが走り，結果を標準出力に出す
 ```
 
 ## How to development
