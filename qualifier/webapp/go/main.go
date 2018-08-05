@@ -3,7 +3,6 @@ package main
 import (
 	"database/sql"
 	"fmt"
-	"net"
 	"net/http"
 	_ "net/http/pprof"
 	"strconv"
@@ -49,13 +48,6 @@ func init() {
 }
 
 func main() {
-
-	I, error := net.Listen("tcp", ":0")
-	if err != nil {
-		panic(err)
-	}
-	fmt.Printf("Listening on %s\n", I.Addr())
-	go http.Serve(I, nil)
 
 	m := martini.Classic()
 
