@@ -3,7 +3,9 @@ package main
 import (
 	"database/sql"
 	"errors"
+	"github.com/gomodule/redigo/redis"
 	"net/http"
+	"strconv"
 	"time"
 )
 
@@ -35,51 +37,23 @@ func createLoginLog(succeeded bool, remoteAddr, login string, user *User) error 
 	return err
 }
 
-func isLockedUser(user *User) (bool, error) {
+func isLockedUser(user *User, c redis.Conn) (bool, error) {
 	if user == nil {
 		return false, nil
 	}
 
-	var ni sql.NullInt64
-	row := db.QueryRow(
-		"SELECT COUNT(1) AS failures FROM login_log WHERE "+
-			"user_id = ? AND id > IFNULL((select id from login_log where user_id = ? AND "+
-			"succeeded = 1 ORDER BY id DESC LIMIT 1), 0);",
-		user.ID, user.ID,
-	)
-	err := row.Scan(&ni)
+	attempCount := get(strconv.Itoa(user.ID), c)
 
-	switch {
-	case err == sql.ErrNoRows:
-		return false, nil
-	case err != nil:
-		return false, err
-	}
-
-	return UserLockThreshold <= int(ni.Int64), nil
+	return UserLockThreshold <= attempCount, nil
 }
 
-func isBannedIP(ip string) (bool, error) {
-	var ni sql.NullInt64
-	row := db.QueryRow(
-		"SELECT COUNT(1) AS failures FROM login_log WHERE "+
-			"ip = ? AND id > IFNULL((select id from login_log where ip = ? AND "+
-			"succeeded = 1 ORDER BY id DESC LIMIT 1), 0);",
-		ip, ip,
-	)
-	err := row.Scan(&ni)
+func isBannedIP(ip string, c redis.Conn) (bool, error) {
+	attempCount := get(ip, c)
 
-	switch {
-	case err == sql.ErrNoRows:
-		return false, nil
-	case err != nil:
-		return false, err
-	}
-
-	return IPBanThreshold <= int(ni.Int64), nil
+	return IPBanThreshold <= attempCount, nil
 }
 
-func attemptLogin(req *http.Request) (*User, error) {
+func attemptLogin(req *http.Request, c redis.Conn) (*User, error) {
 	succeeded := false
 	user := &User{}
 
@@ -87,12 +61,18 @@ func attemptLogin(req *http.Request) (*User, error) {
 	password := req.PostFormValue("password")
 
 	remoteAddr := req.RemoteAddr
+
 	if xForwardedFor := req.Header.Get("X-Forwarded-For"); len(xForwardedFor) > 0 {
 		remoteAddr = xForwardedFor
 	}
 
 	defer func() {
-		createLoginLog(succeeded, remoteAddr, loginName, user)
+		if !succeeded {
+			increment(remoteAddr, c)
+			if user != nil {
+				increment(strconv.Itoa(user.ID), c)
+			}
+		}
 	}()
 
 	row := db.QueryRow(
@@ -108,11 +88,11 @@ func attemptLogin(req *http.Request) (*User, error) {
 		return nil, err
 	}
 
-	if banned, _ := isBannedIP(remoteAddr); banned {
+	if banned, _ := isBannedIP(remoteAddr, c); banned {
 		return nil, ErrBannedIP
 	}
 
-	if locked, _ := isLockedUser(user); locked {
+	if locked, _ := isLockedUser(user, c); locked {
 		return nil, ErrLockedUser
 	}
 
