@@ -3,7 +3,6 @@ package main
 //init redis
 
 import (
-	"database/sql"
 	"fmt"
 	"log"
 	"os"
@@ -49,25 +48,8 @@ func del(key string, c redis.Conn) int {
 	return i
 }
 
-func initredis() {
-
-	dsn := fmt.Sprintf(
-		"%s:%s@tcp(%s:%s)/%s?parseTime=true&loc=Local",
-		getEnv("ISU4_DB_USER", "root"),
-		getEnv("ISU4_DB_PASSWORD", ""),
-		getEnv("ISU4_DB_HOST", "localhost"),
-		getEnv("ISU4_DB_PORT", "3306"),
-		getEnv("ISU4_DB_NAME", "isu4_qualifier"),
-	)
-
-	var err error
-
-	db, err = sql.Open("mysql", dsn)
-	if err != nil {
-		panic(err)
-	}
+func init() {
 	p = newPool("redis:6379")
-
 }
 
 func initLoginLog() {
@@ -98,7 +80,7 @@ func initLoginLog() {
 
 }
 
-func main() {
+func initredis() {
 	init()
 	initLoginLog()
 }

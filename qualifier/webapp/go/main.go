@@ -29,7 +29,6 @@ func init() {
 		getEnv("ISU4_DB_PORT", "3306"),
 		getEnv("ISU4_DB_NAME", "isu4_qualifier"),
 	)
-	initredis()
 
 	var err error
 
@@ -47,6 +46,7 @@ func init() {
 	if err != nil {
 		panic(err)
 	}
+	initredis()
 
 }
 
