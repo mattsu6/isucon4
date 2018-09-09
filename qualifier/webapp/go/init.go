@@ -1,7 +1,5 @@
 package main
 
-//init redis
-
 import (
 	"fmt"
 	"log"
