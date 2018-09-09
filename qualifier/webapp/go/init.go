@@ -47,12 +47,8 @@ func del(key string, c redis.Conn) string {
 	return i
 }
 
-func init() {
-	p = newPool("redis:6379")
-}
-
 func initLoginLog() {
-
+	p = newPool("redis:6379")
 	query := "SELECT ip, user_id, succeeded FROM login_log ORDER BY created_at"
 	rows, err := db.Query(query)
 	c := p.Get()
@@ -80,6 +76,5 @@ func initLoginLog() {
 }
 
 func initredis() {
-	init()
 	initLoginLog()
 }
