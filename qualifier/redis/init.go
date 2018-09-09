@@ -1,17 +1,20 @@
-package redis
+package main
 
 import (
 	"database/sql"
 	"fmt"
 	"log"
+	_ "net/http/pprof"
 	"os"
+	"strconv"
 	"time"
 
+	_ "github.com/go-sql-driver/mysql"
 	"github.com/gomodule/redigo/redis"
 )
 
-var db *sql.DB
 var p *redis.Pool
+var db *sql.DB
 
 func newPool(addr string) *redis.Pool {
 	return &redis.Pool{
@@ -39,7 +42,7 @@ func setZero(key string, c redis.Conn) int {
 	return i
 }
 
-func del(key string, c redis.Conn) int {
+func del(key string, c redis.Conn) string {
 	i, err := redis.String(c.Do("DEL", key))
 	if err != nil {
 		fmt.Println(err)
@@ -48,7 +51,7 @@ func del(key string, c redis.Conn) int {
 	return i
 }
 
-func init() {
+func initLoginLog() {
 
 	dsn := fmt.Sprintf(
 		"%s:%s@tcp(%s:%s)/%s?parseTime=true&loc=Local",
@@ -65,12 +68,8 @@ func init() {
 	if err != nil {
 		panic(err)
 	}
+
 	p = newPool("redis:6379")
-
-}
-
-func initLoginLog() {
-
 	query := "SELECT ip, user_id, succeeded FROM login_log ORDER BY created_at"
 	rows, err := db.Query(query)
 	c := p.Get()
@@ -80,24 +79,34 @@ func initLoginLog() {
 	}
 	defer c.Close()
 	for rows.Next() {
+
 		var ip string
 		var id int
 		var succeeded int
 		if err := rows.Scan(&ip, &id, &succeeded); err != nil {
 			log.Fatal(err)
 		}
+		fmt.Println(ip + " : " + strconv.Itoa(id))
 		if succeeded == 1 {
 			del(ip, c)
-			del(id, c)
+			del(strconv.Itoa(id), c)
 		} else if succeeded == 0 {
 			increment(ip, c)
-			increment(id, c)
+			increment(strconv.Itoa(id), c)
 		}
 	}
 
 }
 
+func getEnv(key string, def string) string {
+	v := os.Getenv(key)
+	if len(v) == 0 {
+		return def
+	}
+
+	return v
+}
+
 func main() {
-	init()
 	initLoginLog()
 }

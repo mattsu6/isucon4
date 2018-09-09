@@ -1,12 +1,15 @@
 package main
 
 import (
+	"database/sql"
 	"fmt"
 	"log"
+	_ "net/http/pprof"
 	"os"
 	"strconv"
 	"time"
 
+	_ "github.com/go-sql-driver/mysql"
 	"github.com/gomodule/redigo/redis"
 )
 
@@ -48,6 +51,23 @@ func del(key string, c redis.Conn) string {
 }
 
 func initLoginLog() {
+
+	dsn := fmt.Sprintf(
+		"%s:%s@tcp(%s:%s)/%s?parseTime=true&loc=Local",
+		getEnv("ISU4_DB_USER", "root"),
+		getEnv("ISU4_DB_PASSWORD", ""),
+		getEnv("ISU4_DB_HOST", "localhost"),
+		getEnv("ISU4_DB_PORT", "3306"),
+		getEnv("ISU4_DB_NAME", "isu4_qualifier"),
+	)
+
+	var err error
+
+	db, err = sql.Open("mysql", dsn)
+	if err != nil {
+		panic(err)
+	}
+
 	p = newPool("redis:6379")
 	query := "SELECT ip, user_id, succeeded FROM login_log ORDER BY created_at"
 	rows, err := db.Query(query)
