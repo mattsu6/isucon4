@@ -58,12 +58,14 @@ func initLoginLog() {
 	}
 	defer c.Close()
 	for rows.Next() {
+
 		var ip string
 		var id int
 		var succeeded int
 		if err := rows.Scan(&ip, &id, &succeeded); err != nil {
 			log.Fatal(err)
 		}
+		fmt.Println(ip + " : " + strconv.Itoa(id))
 		if succeeded == 1 {
 			del(ip, c)
 			del(strconv.Itoa(id), c)
