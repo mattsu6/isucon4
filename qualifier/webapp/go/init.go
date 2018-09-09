@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/gomodule/redigo/redis"
@@ -39,7 +40,7 @@ func setZero(key string, c redis.Conn) int {
 	return i
 }
 
-func del(key string, c redis.Conn) int {
+func del(key string, c redis.Conn) string {
 	i, err := redis.String(c.Do("DEL", key))
 	if err != nil {
 		fmt.Println(err)
@@ -71,10 +72,10 @@ func initLoginLog() {
 		}
 		if succeeded == 1 {
 			del(ip, c)
-			del(id, c)
+			del(strconv.Itoa(id), c)
 		} else if succeeded == 0 {
 			increment(ip, c)
-			increment(id, c)
+			increment(strconv.Itoa(id), c)
 		}
 	}
 
