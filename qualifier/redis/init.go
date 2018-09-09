@@ -3,49 +3,52 @@ package redis
 import (
 	"database/sql"
 	"fmt"
-	"github.com/garyburd/redigo/redis"
+	"log"
+	"os"
+	"time"
+
+	"github.com/gomodule/redigo/redis"
 )
 
-db := *sql.DB
-c := *redis.Pool
+var db *sql.DB
+var p *redis.Pool
 
 func newPool(addr string) *redis.Pool {
-    return &redis.Pool{
-        MaxIdle:     3,
-        IdleTimeout: 240 * time.Second,
-        Dial:        func() (redis.Conn, error) { return redis.Dial("tcp", addr) },
-    }
+	return &redis.Pool{
+		MaxIdle:     3,
+		IdleTimeout: 240 * time.Second,
+		Dial:        func() (redis.Conn, error) { return redis.Dial("tcp", addr) },
+	}
 }
 
 func increment(key string, c redis.Conn) int {
-    i, err := redis.Int(c.Do("INCR", key))
-    if err != nil {
-        fmt.Println(err)
-        os.Exit(1)
-    }
-    return i
+	i, err := redis.Int(c.Do("INCR", key))
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+	return i
 }
 
 func setZero(key string, c redis.Conn) int {
 	i, err := redis.Int(c.Do("SET", key, 0))
-    if err != nil {
-        fmt.Println(err)
-        os.Exit(1)
-    }
-    return i
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+	return i
 }
 
 func del(key string, c redis.Conn) int {
 	i, err := redis.String(c.Do("DEL", key))
-    if err != nil {
-        fmt.Println(err)
-        os.Exit(1)
-    }
-    return i
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+	return i
 }
 
 func init() {
-
 
 	dsn := fmt.Sprintf(
 		"%s:%s@tcp(%s:%s)/%s?parseTime=true&loc=Local",
@@ -62,36 +65,39 @@ func init() {
 	if err != nil {
 		panic(err)
 	}
-	c = newPool("redis:6379")
+	p = newPool("redis:6379")
 
 }
 
 func initLoginLog() {
 
-	query:= "SELECT ip, user_id, succeeded FROM login_log ORDER BY created_at"
+	query := "SELECT ip, user_id, succeeded FROM login_log ORDER BY created_at"
 	rows, err := db.Query(query)
-	if err != nil{
+	c := p.Get()
+	defer c.Close()
+	if err != nil {
 		panic(err)
 	}
+	defer c.Close()
 	for rows.Next() {
 		var ip string
 		var id int
-		var scceeded int
-		if err := rows.Scan(&ip, &user_id, &succeeded); err != nil{
+		var succeeded int
+		if err := rows.Scan(&ip, &id, &succeeded); err != nil {
 			log.Fatal(err)
 		}
 		if succeeded == 1 {
 			del(ip, c)
 			del(id, c)
-		}else if succeeded == 0 {
+		} else if succeeded == 0 {
 			increment(ip, c)
 			increment(id, c)
 		}
 	}
-	defer c.Close()
+
 }
 
-func main(){
+func main() {
 	init()
 	initLoginLog()
 }
