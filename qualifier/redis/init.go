@@ -42,8 +42,8 @@ func setZero(key string, c redis.Conn) int {
 	return i
 }
 
-func del(key string, c redis.Conn) string {
-	i, err := redis.String(c.Do("DEL", key))
+func del(key string, c redis.Conn) int {
+	i, err := redis.Int(c.Do("DEL", key))
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
@@ -53,14 +53,7 @@ func del(key string, c redis.Conn) string {
 
 func initLoginLog() {
 
-	dsn := fmt.Sprintf(
-		"%s:%s@tcp(%s:%s)/%s?parseTime=true&loc=Local",
-		getEnv("ISU4_DB_USER", "root"),
-		getEnv("ISU4_DB_PASSWORD", ""),
-		getEnv("ISU4_DB_HOST", "localhost"),
-		getEnv("ISU4_DB_PORT", "3306"),
-		getEnv("ISU4_DB_NAME", "isu4_qualifier"),
-	)
+	dsn := "root:@tcp(mysql:3306)/isu4_qualifier?parseTime=true&loc=Local"
 
 	var err error
 
