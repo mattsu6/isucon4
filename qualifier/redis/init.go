@@ -103,7 +103,6 @@ func getEnv(key string, def string) string {
 	if len(v) == 0 {
 		return def
 	}
-
 	return v
 }
 
