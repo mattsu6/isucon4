@@ -1,7 +1,9 @@
+package redis
+
 import (
 	"database/sql"
 	"fmt"
-	"redigo"
+	"github.com/garyburd/redigo/redis"
 )
 
 db := *sql.DB
