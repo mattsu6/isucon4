@@ -7,4 +7,3 @@ go get github.com/martini-contrib/sessions
 go get github.com/gomodule/redigo/redis
 go build -o golang-webapp .
 
-go run /home/isucon/redis/init.go
