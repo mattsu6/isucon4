@@ -3,6 +3,7 @@ set -x
 set -e
 cd $(dirname $0)
 
+echo "###########HELLO##########"
 myuser=root
 mydb=isu4_qualifier
 myhost=127.0.0.1
