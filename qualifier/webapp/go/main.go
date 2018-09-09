@@ -3,14 +3,15 @@ package main
 import (
 	"database/sql"
 	"fmt"
-	"github.com/go-martini/martini"
-	_ "github.com/go-sql-driver/mysql"
-	"github.com/martini-contrib/render"
-	"github.com/martini-contrib/sessions"
 	"log"
 	"net/http"
 	_ "net/http/pprof"
 	"strconv"
+
+	"github.com/go-martini/martini"
+	_ "github.com/go-sql-driver/mysql"
+	"github.com/martini-contrib/render"
+	"github.com/martini-contrib/sessions"
 )
 
 var db *sql.DB
@@ -28,6 +29,7 @@ func init() {
 		getEnv("ISU4_DB_PORT", "3306"),
 		getEnv("ISU4_DB_NAME", "isu4_qualifier"),
 	)
+	initredis()
 
 	var err error
 
@@ -45,6 +47,7 @@ func init() {
 	if err != nil {
 		panic(err)
 	}
+
 }
 
 func main() {
