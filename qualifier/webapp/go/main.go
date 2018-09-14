@@ -13,11 +13,6 @@ import (
 	"github.com/gomodule/redigo/redis"
 	"github.com/martini-contrib/render"
 	"github.com/martini-contrib/sessions"
-
-	"github.com/go-martini/martini"
-	_ "github.com/go-sql-driver/mysql"
-	"github.com/martini-contrib/render"
-	"github.com/martini-contrib/sessions"
 )
 
 var db *sql.DB
