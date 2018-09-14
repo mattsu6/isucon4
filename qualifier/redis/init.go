@@ -50,6 +50,15 @@ func del(key string, c redis.Conn) int {
 	return i
 }
 
+func flush(c redis.Conn) string {
+	i, err := redis.String(c.Do("FLUSHALL"))
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+	return i
+}
+
 func initLoginLog() {
 
 	dsn := "root:@tcp(mysql:3306)/isu4_qualifier?parseTime=true&loc=Local"
@@ -65,6 +74,7 @@ func initLoginLog() {
 	query := "SELECT ip, user_id, succeeded FROM login_log ORDER BY created_at"
 	rows, err := db.Query(query)
 	c := p.Get()
+	flush(c)
 	defer c.Close()
 	if err != nil {
 		panic(err)
