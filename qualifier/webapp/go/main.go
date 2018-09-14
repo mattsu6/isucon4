@@ -3,6 +3,14 @@ package main
 import (
 	"database/sql"
 	"fmt"
+<<<<<<< HEAD
+=======
+	"github.com/go-martini/martini"
+	_ "github.com/go-sql-driver/mysql"
+	"github.com/gomodule/redigo/redis"
+	"github.com/martini-contrib/render"
+	"github.com/martini-contrib/sessions"
+>>>>>>> add-redis
 	"log"
 	"net/http"
 	_ "net/http/pprof"
@@ -18,6 +26,7 @@ var db *sql.DB
 var (
 	UserLockThreshold int
 	IPBanThreshold    int
+	pool              *redis.Pool
 )
 
 func init() {
@@ -47,6 +56,13 @@ func init() {
 		panic(err)
 	}
 
+<<<<<<< HEAD
+=======
+	redisHost := getEnv("ISU4_REDIS_HOST", "localhost")
+	redisPort := getEnv("ISU4_REDIS_PORT", "6379")
+	pool = newPool(redisHost + ":" + redisPort)
+
+>>>>>>> add-redis
 }
 
 func main() {
@@ -70,7 +86,10 @@ func main() {
 	})
 
 	m.Post("/login", func(req *http.Request, r render.Render, session sessions.Session) {
-		user, err := attemptLogin(req)
+		conn := pool.Get()
+		defer conn.Close()
+
+		user, err := attemptLogin(req, conn)
 
 		notice := ""
 		if err != nil || user == nil {
