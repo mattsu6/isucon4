@@ -3,18 +3,16 @@ package main
 import (
 	"database/sql"
 	"fmt"
-<<<<<<< HEAD
-=======
+	"log"
+	"net/http"
+	_ "net/http/pprof"
+	"strconv"
+
 	"github.com/go-martini/martini"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/gomodule/redigo/redis"
 	"github.com/martini-contrib/render"
 	"github.com/martini-contrib/sessions"
->>>>>>> add-redis
-	"log"
-	"net/http"
-	_ "net/http/pprof"
-	"strconv"
 
 	"github.com/go-martini/martini"
 	_ "github.com/go-sql-driver/mysql"
@@ -56,13 +54,10 @@ func init() {
 		panic(err)
 	}
 
-<<<<<<< HEAD
-=======
 	redisHost := getEnv("ISU4_REDIS_HOST", "localhost")
 	redisPort := getEnv("ISU4_REDIS_PORT", "6379")
 	pool = newPool(redisHost + ":" + redisPort)
 
->>>>>>> add-redis
 }
 
 func main() {
